@@ -15,19 +15,30 @@ class ArticleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request): JsonResponse
+    public function getArticles(Request $request): JsonResponse
     {
         //
         $articles = Article::filterBy($request->all())
             ->with('author:id,name')
             ->with('category:id,name')
-            ->paginate($request->input('per_page', 25));;
+            ->orderBy('id', 'DESC')
+            ->whereNotNull('image_url');
 
         return response()->json([
             'message' => 'Data fetched successfully.',
-            'data' => $articles,
+            'data' => $this->parseQuery($articles, $request),
         ], Response::HTTP_OK);
 
+    }
+
+    public function getArticle($id): JsonResponse
+    {
+        $article = Article::where('id', $id)->first();
+
+        return \response()->json([
+            'message' => 'Data fetched successfully.',
+            'data' => $article
+        ], Response::HTTP_OK);
     }
 
     /**
