@@ -17,7 +17,7 @@ class CreateArticlesTable extends Migration
 
             $table->integer('id', true);
             $table->integer('author_id');
-            $table->integer('author_id');
+            $table->integer('category_id');
             $table->string('contributors');
             $table->mediumText('title');
             $table->longText('description')->nullable();
