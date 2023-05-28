@@ -1,0 +1,20 @@
+version: '3.8'
+
+volumes:
+    composer-vol:
+services:
+    web:
+        build: .
+        container_name: scripta-news-backend-api
+        restart: unless-stopped
+        volumes:
+            - './public:/var/www/html'
+            - './:/var/www/'
+        ports:
+            - 82:80
+        networks:
+            - ptpn-database_default
+networks:
+    ptpn-database_default:
+        external: true
+        name: -ptpn-database-default
