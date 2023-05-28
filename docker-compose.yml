@@ -1,20 +1,38 @@
 version: '3.8'
-
-volumes:
-    composer-vol:
 services:
-    web:
-        build: .
-        container_name: scripta-news-backend-api
-        restart: unless-stopped
+    main:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: 'php artisan serve --host=0.0.0.0'
         volumes:
-            - './public:/var/www/html'
-            - './:/var/www/'
+            - .:/scripta-backend
         ports:
-            - 82:80
-        networks:
-            - ptpn-database_default
+            - 8000:8000
+        depends_on:
+            - db
+    db:
+        image: mysql
+        command: --default-authentication-plugin=mysql_native_password
+        container_name: db
+        platform: linux/amd64
+        restart: always
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+            MYSQL_DATABASE: 'scripta'
+            MYSQL_USER: 'kev'
+            MYSQL_PASSWORD: 'kev'
+            MYSQL_ROOT_PASSWORD: ''
+        expose:
+            - '3306'
+        volumes:
+            - ./init:/docker-entrypoint-initdb.d
+            - app_db:/var/lib/mysql
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+volumes:
+    app_db:
+
 networks:
-    ptpn-database_default:
-        external: true
-        name: -ptpn-database-default
+    nt_mysql:
+        driver: bridge
