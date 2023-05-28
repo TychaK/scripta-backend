@@ -41,5 +41,34 @@ class Article extends Model
                 $q->orWhere('authors.name', 'LIKE', '%' . $filters['search'] . '%');
             });
         });
+
+        $q->when(isset($filters['category_id']), function ($q) use ($filters) {
+            $q->whereIn('category_id', $filters['category_id']);
+        });
+
+//        $q->when(isset($filters['summary']), function ($q) use ($filters) {
+//            $q->limit(12);
+//        });
+
+        $q->when(isset($filters['user_id']), function ($q) use ($filters) {
+            // try to personalize articles based on the user id provided ...
+
+            $categories = UserCategoryPreference::where('user_id', $filters['user_id'])
+                ->pluck('category_id')
+                ->toArray();
+
+            $authors = UserAuthorPreference::where('user_id', $filters['user_id'])
+                ->pluck('author_id')
+                ->toArray();
+
+            if (!empty($categories)) {
+                $q->whereIn('category_id', $categories);
+            }
+
+            if (!empty($authors)) {
+                $q->orWhereIn('author_id', $authors);
+            }
+
+        });
     }
 }
