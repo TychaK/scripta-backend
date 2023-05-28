@@ -39,7 +39,8 @@ class RegisterController extends Controller
 
             return response()->json(
                 [
-                    'errors' => $this->validator($request)->errors()
+                    'errors' => $this->validator($request)->errors(),
+                    'message' => 'The data given was invalid.'
                 ],
                 Response::HTTP_UNPROCESSABLE_ENTITY);
         } else {
