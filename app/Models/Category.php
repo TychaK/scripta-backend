@@ -13,4 +13,11 @@ class Category extends Model
         'name',
         'sync_time'
     ];
+
+    public function scopeFilterBy($q, $filters)
+    {
+        $q->when(isset($filters['search']), function ($q) use ($filters) {
+            $q->where('name', 'LIKE', '%' . $filters['search'] . '%');
+        });
+    }
 }
