@@ -6,14 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class UserPreference extends Model
+class UserCategoryPreference extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'category_id',
-        'author_id'
+        'category_id'
     ];
 
     public function user(): BelongsTo
@@ -24,10 +23,5 @@ class UserPreference extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id', 'id');
-    }
-
-    public function author(): BelongsTo
-    {
-        return $this->belongsTo(Author::class, 'author_id', 'id');
     }
 }
