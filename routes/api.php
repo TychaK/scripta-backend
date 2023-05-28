@@ -15,10 +15,21 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::group(['namespace' => 'Api'], function () {
-    Route::resource('/articles', 'ArticleController');
+    Route::get('/articles', 'ArticleController@getArticles');
+    Route::get('/articles/{id}', 'ArticleController@getArticle');
+    Route::get('/categories', 'CategoryController@getCategories');
+    Route::get('/authors', 'AuthorController@getAuthors');
+
+
 });
 
 Route::group(['namespace' => 'Auth'], function () {
     Route::post('/login', 'LoginController@login');
     Route::post('/register', 'RegisterController@register');
+});
+
+Route::group(['middleware' => 'auth:api'], function () {
+    Route::group(['namespace' => 'Api'], function () {
+        Route::post('/preferences', 'UserPreferenceController@savePreferences');
+    });
 });
