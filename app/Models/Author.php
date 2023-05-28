@@ -12,4 +12,11 @@ class Author extends Model
     protected $fillable = [
         'name'
     ];
+
+    public function scopeFilterBy($q, $filters)
+    {
+        $q->when(isset($filters['search']), function ($q) use ($filters) {
+            $q->where('name', 'LIKE', '%' . $filters['search'] . '%');
+        });
+    }
 }
