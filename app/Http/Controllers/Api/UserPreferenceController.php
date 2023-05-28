@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\UserPreference;
+use App\Models\UserAuthorPreference;
+use App\Models\UserCategoryPreference;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
 class UserPreferenceController extends Controller
 {
@@ -18,7 +20,7 @@ class UserPreferenceController extends Controller
     public function index(Request $request): JsonResponse
     {
         //
-        $preferences = UserPreference::filterBy($request->all());
+        $preferences = UserCategoryPreference::filterBy($request->all());
 
         return response()->json([
             'message' => 'Data fetched successfully.',
@@ -32,14 +34,34 @@ class UserPreferenceController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request): JsonResponse
+    public function savePreferences(Request $request): JsonResponse
     {
         //
-        $preferences = UserPreference::updateOrCreate($request->all());
+
+        $authors = $request->authors;
+
+        $categories = $request->categories;
+
+        collect($authors)->each(function ($author) use ($request) {
+            UserAuthorPreference::updateOrCreate([
+                'user_id' => Auth::id(),
+                'author_id' => $author['value'] ?? $author['id']
+            ]);
+        });
+
+        collect($categories)->each(function ($category) use ($request) {
+            UserCategoryPreference::updateOrCreate([
+                'user_id' => Auth::id(),
+                'category_id' => $category['value'] ?? $category['id']
+            ]);
+        });
 
         return response()->json([
-            'message' => 'Data updated successfully.',
-            'data' => $preferences
+            'message' => 'Your preferences have been updated successfully.',
+            'data' => [
+                'categories' => $categories,
+                'authors' => $authors
+            ]
         ], Response::HTTP_OK);
     }
 
