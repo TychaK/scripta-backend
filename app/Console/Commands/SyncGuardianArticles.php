@@ -20,7 +20,7 @@ class SyncGuardianArticles extends Command
      *
      * @var string
      */
-    protected $signature = 'sync:guardian_api';
+    protected $signature = 'sync:guardian_api {category}';
 
     /**
      * The console command description.
@@ -49,8 +49,6 @@ class SyncGuardianArticles extends Command
 
         Log::info("Starting to get guardian articles ");
 
-        $categories = Category::all();
-
         $client = Client::where('slug', 'guardian-api')->first();
 
         if (!$client) {
@@ -58,76 +56,76 @@ class SyncGuardianArticles extends Command
             return "Processing aborted ...";
         }
 
-        collect($categories)->each(function ($category) use ($client) {
+        $category = (object)$this->argument('category');
 
-            // get the latest news for this category, note the last fetch time
+        Log::info("Received category" . json_encode($category));
 
-            // we will ignore pagination for now but the service can be
+        // get the latest news for this category, note the last fetch time
 
-            // improved to include pagination of records ...
+        // we will ignore pagination for now but the service can be
 
-            $baseUrl = $client->base_url;
+        // improved to include pagination of records ...
 
-            $apiKey = $client->api_key;
+        $baseUrl = $client->base_url;
 
-            $params = [
-                'api-key' => $apiKey,
-                'section' => $category->name,
-                'show-fields' => implode(',', [
-                    'body',
-                    'thumbnail',
-                    'headline'
-                ]),
-                'show-tags' => implode(',', [
-                    'contributor'
-                ])
-            ];
+        $apiKey = $client->api_key;
 
-            $url = $baseUrl . "?" . http_build_query($params);
+        $params = [
+            'api-key' => $apiKey,
+            'section' => $category->name,
+            'show-fields' => implode(',', [
+                'body',
+                'thumbnail',
+                'headline'
+            ]),
+            'show-tags' => implode(',', [
+                'contributor'
+            ])
+        ];
 
-            Log::info("Generated url with params as " . $url);
+        $url = $baseUrl . "?" . http_build_query($params);
 
-            $response = (object)$this->fetch($url);
+        Log::info("Generated url with params as " . $url);
 
-            Log::info("Got articles for client " . $client->name . ' as ' . json_encode($response));
+        $response = (object)$this->fetch($url);
 
-            // map through articles and save in a model that is universal
+        Log::info("Got articles for client " . $client->name . ' as ' . json_encode($response));
 
-            $data = ($response->response->results);
+        // map through articles and save in a model that is universal
 
-            $articles = collect($data)->map(function ($article) use ($category) {
+        $data = ($response->response->results);
 
-                $contributors = collect($article->tags)->map(function ($tag) {
-                    return $tag->webTitle;
-                })->all();
+        $articles = collect($data)->map(function ($article) use ($category) {
 
-                Log::info("Contributors" . json_encode($contributors));
-
-                Log::info("Article now " . json_encode($article));
-
-                $authorName = $article->tags->author ?? 'Unknown';
-
-                $author = Author::updateOrCreate([
-                    'name' => $authorName
-                ]);
-
-                return [
-                    'category_id' => $category->id,
-                    'author_id' => $author->id,
-                    'contributors' => implode(',', $contributors),
-                    'title' => $article->webTitle,
-                    'description' => $article->fields->body ?? $article->fields->headline,
-                    'url' => $article->webUrl,
-                    'image_url' => $article->fields->thumbnail,
-                    'published_at' => Carbon::parse($article->webPublicationDate)
-                ];
+            $contributors = collect($article->tags)->map(function ($tag) {
+                return $tag->webTitle;
             })->all();
 
-            Log::info("Mapped" . json_encode($articles));
+            Log::info("Contributors" . json_encode($contributors));
 
-            Article::insertOrIgnore($articles);
+            Log::info("Article now " . json_encode($article));
 
-        });
+            $authorName = $article->tags->author ?? 'Unknown';
+
+            $author = Author::updateOrCreate([
+                'name' => $authorName
+            ]);
+
+            return [
+                'category_id' => $category->id,
+                'author_id' => $author->id,
+                'contributors' => implode(',', $contributors),
+                'title' => $article->webTitle,
+                'description' => $article->fields->body ?? $article->fields->headline,
+                'url' => $article->webUrl,
+                'image_url' => $article->fields->thumbnail,
+                'published_at' => Carbon::parse($article->webPublicationDate)
+            ];
+        })->all();
+
+        Log::info("Mapped" . json_encode($articles));
+
+        Article::insertOrIgnore($articles);
 
         Log::info("Finished fetching news api ... ");
 

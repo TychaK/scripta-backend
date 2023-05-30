@@ -20,7 +20,7 @@ class SyncNewsApiArticles extends Command
      *
      * @var string
      */
-    protected $signature = 'sync:news_api';
+    protected $signature = 'sync:news_api {category}';
 
     /**
      * The console command description.
@@ -55,61 +55,60 @@ class SyncNewsApiArticles extends Command
         if (!$client) {
             Log::info("Unable to find such a client ... aborting ...");
         }
-        collect($categories)->each(function ($category) use ($client) {
 
-            // get the latest news for this category, note the last fetch time
+        $category = (object)$this->argument('category');
 
-            // we will ignore pagination for now but the service can be
+        // get the latest news for this category, note the last fetch time
 
-            // improved to include pagination of records ...
+        // we will ignore pagination for now but the service can be
 
-            $baseUrl = $client->base_url;
+        // improved to include pagination of records ...
 
-            $apiKey = $client->api_key;
+        $baseUrl = $client->base_url;
 
-            $params = [
-                'apiKey' => $apiKey,
-                'category' => $category->name
+        $apiKey = $client->api_key;
+
+        $params = [
+            'apiKey' => $apiKey,
+            'category' => $category->name
+        ];
+
+        $url = $baseUrl . "?" . http_build_query($params);
+
+        Log::info("Generated url with params as " . $url);
+
+        $response = (object)$this->fetch($url);
+
+        Log::info("Got articles for client " . $client->name . ' as ' . json_encode($response));
+
+        // map through articles and save in a model that is universal
+
+        $data = ($response->articles);
+
+        $articles = collect($data)->map(function ($article) use ($category) {
+
+            Log::info("Article now " . json_encode($article));
+
+            $authorName = $article->author ?? 'Unknown';
+
+            $author = Author::updateOrCreate([
+                'name' => $authorName
+            ]);
+
+            return [
+                'category_id' => $category->id,
+                'author_id' => $author->id,
+                'title' => $article->title,
+                'description' => $article->content ?? $article->description,
+                'url' => $article->url,
+                'image_url' => $article->urlToImage,
+                'published_at' => Carbon::parse($article->publishedAt)
             ];
+        })->all();
 
-            $url = $baseUrl . "?" . http_build_query($params);
+        Log::info("Mapped" . json_encode($articles));
 
-            Log::info("Generated url with params as " . $url);
-
-            $response = (object)$this->fetch($url);
-
-            Log::info("Got articles for client " . $client->name . ' as ' . json_encode($response));
-
-            // map through articles and save in a model that is universal
-
-            $data = ($response->articles);
-
-            $articles = collect($data)->map(function ($article) use ($category) {
-
-                Log::info("Article now " . json_encode($article));
-
-                $authorName = $article->author ?? 'Unknown';
-
-                $author = Author::updateOrCreate([
-                    'name' => $authorName
-                ]);
-
-                return [
-                    'category_id' => $category->id,
-                    'author_id' => $author->id,
-                    'title' => $article->title,
-                    'description' => $article->content ?? $article->description,
-                    'url' => $article->url,
-                    'image_url' => $article->urlToImage,
-                    'published_at' => Carbon::parse($article->publishedAt)
-                ];
-            })->all();
-
-            Log::info("Mapped" . json_encode($articles));
-
-            Article::insertOrIgnore($articles);
-
-        });
+        Article::insertOrIgnore($articles);
 
         Log::info("Finished fetching guardian api ... ");
 
