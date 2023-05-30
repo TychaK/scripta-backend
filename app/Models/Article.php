@@ -13,6 +13,7 @@ class Article extends Model
     protected $fillable = [
         'category_id',
         'author_id',
+        'source_id',
         'title',
         'description',
         'url',
@@ -29,6 +30,11 @@ class Article extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(Author::class, 'author_id', 'id');
+    }
+
+    public function source(): BelongsTo
+    {
+        return $this->belongsTo(Client::class, 'source_id', 'id');
     }
 
     public function scopeFilterBy($q, $filters)
@@ -61,12 +67,20 @@ class Article extends Model
                 ->pluck('author_id')
                 ->toArray();
 
+            $sources = UserSourcePreference::where('user_id', $filters['user_id'])
+                ->pluck('source_id')
+                ->toArray();
+
             if (!empty($categories)) {
                 $q->whereIn('category_id', $categories);
             }
 
             if (!empty($authors)) {
                 $q->orWhereIn('author_id', $authors);
+            }
+
+            if (!empty($sources)) {
+                $q->orWhereIn('source_id', $sources);
             }
 
         });
