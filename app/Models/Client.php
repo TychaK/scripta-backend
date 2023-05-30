@@ -15,4 +15,11 @@ class Client extends Model
         'api_key',
         'base_url'
     ];
+
+    public function scopeFilterBy($q, $filters)
+    {
+        $q->when(isset($filters['search']), function ($q) use ($filters) {
+            $q->where('name', 'LIKE', '%' . $filters['search'] . '%');
+        });
+    }
 }
