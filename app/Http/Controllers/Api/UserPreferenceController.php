@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\UserAuthorPreference;
 use App\Models\UserCategoryPreference;
+use App\Models\UserSourcePreference;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -38,9 +39,11 @@ class UserPreferenceController extends Controller
     {
         //
 
-        $authors = $request->authors;
+        $authors = $request->authors ?? [];
 
-        $categories = $request->categories;
+        $categories = $request->categories ?? [];
+
+        $sources = $request->sources ?? [];
 
         collect($authors)->each(function ($author) use ($request) {
             UserAuthorPreference::updateOrCreate([
@@ -53,6 +56,13 @@ class UserPreferenceController extends Controller
             UserCategoryPreference::updateOrCreate([
                 'user_id' => Auth::id(),
                 'category_id' => $category['value'] ?? $category['id']
+            ]);
+        });
+
+        collect($sources)->each(function ($source) use ($request) {
+            UserSourcePreference::updateOrCreate([
+                'user_id' => Auth::id(),
+                'source_id' => $source['value'] ?? $source['id']
             ]);
         });
 
