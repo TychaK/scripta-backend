@@ -95,6 +95,11 @@ class SyncGuardianArticles extends Command
 
         $data = ($response->response->results);
 
+        if (count(get_object_vars($response)) == 0) {
+            Log::info("No Articles for category ");
+            return;
+        }
+
         $articles = collect($data)->map(function ($article) use ($category) {
 
             $contributors = collect($article->tags)->map(function ($tag) {

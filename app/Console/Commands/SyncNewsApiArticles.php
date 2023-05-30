@@ -81,6 +81,11 @@ class SyncNewsApiArticles extends Command
 
         Log::info("Got articles for client " . $client->name . ' as ' . json_encode($response));
 
+        if (count(get_object_vars($response)) == 0) {
+            Log::info("No Articles for category ");
+            return;
+        }
+
         // map through articles and save in a model that is universal
 
         $data = ($response->articles);
