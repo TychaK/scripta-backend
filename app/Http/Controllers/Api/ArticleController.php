@@ -17,7 +17,7 @@ class ArticleController extends Controller
      */
     public function getArticles(Request $request): JsonResponse
     {
-        //
+        // dispatch job at this point to ensure article availabilities ...
         $articles = Article::filterBy($request->all())
             ->with('author:id,name')
             ->with('category:id,name')
