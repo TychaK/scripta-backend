@@ -4,6 +4,10 @@ How to run
 2. cd to the project directory
 3. Run the following commands to run the project in a docker container
 
+### composer install
+After running composer install, run:
+### cp .env.example .env
+
 ### docker-compose build --no-cache
 ### docker-compose up
 
