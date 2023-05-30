@@ -19,6 +19,7 @@ Route::group(['namespace' => 'Api'], function () {
     Route::get('/articles/{id}', 'ArticleController@getArticle');
     Route::get('/categories', 'CategoryController@getCategories');
     Route::get('/authors', 'AuthorController@getAuthors');
+    Route::get('/sources', 'SourceController@getSources');
 
 
 });
